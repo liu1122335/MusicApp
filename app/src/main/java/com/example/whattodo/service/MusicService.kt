@@ -38,11 +38,9 @@ class MusicService : Service() {
         mediaPlayer?.setOnCompletionListener {
             stopSelf()
         }
-        createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(1, createNotification())
         return START_NOT_STICKY
     }
 
@@ -87,32 +85,5 @@ class MusicService : Service() {
         } else {
             mediaPlayer?.start()
         }
-    }
-
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "music_service_channel",
-                "Music Service Channel",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
-    }
-
-    private fun createNotification(): Notification {
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-            PendingIntent.FLAG_MUTABLE)
-
-        return NotificationCompat.Builder(this, "music_service_channel")
-            .setContentTitle("Music Player")
-            .setContentText("Playing music in the background")
-            .setSmallIcon(R.drawable.ic_home)
-            .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
     }
 }

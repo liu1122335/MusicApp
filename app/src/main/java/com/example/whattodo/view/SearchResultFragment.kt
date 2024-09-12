@@ -12,11 +12,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.whattodo.MainActivity
 import com.example.whattodo.R
 import com.example.whattodo.adapter.MusicItemAdapter
 import com.example.whattodo.databinding.FragmentSearchResultBinding
 import com.example.whattodo.service.MusicService
+import com.example.whattodo.viewmodel.MainActivityViewModel
 import com.example.whattodo.viewmodel.SearchResultViewModel
 import com.google.android.material.tabs.TabLayout
 
@@ -47,6 +50,10 @@ class SearchResultFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+
+        val mainActivityViewModel = ViewModelProvider(requireActivity()).get(MainActivityViewModel::class.java)
+        musicService = mainActivityViewModel.musicService.value
 
         val musicTitle = arguments?.getString("musicTitle")
         val recyclerView =  viewBinding.resultRecyclerview
@@ -91,12 +98,6 @@ class SearchResultFragment : Fragment() {
                     Log.d("position", position.toString())
                     val music = musicList.getOrNull(position) ?: return@MusicItemAdapter
 
-                    if (viewModel.isBinding.value == false) {
-                        Log.d("intent", "run")
-                        val intent = Intent(context, MusicService::class.java)
-                        activity?.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-                    }
-
                     musicService?.let { service ->
                         try {
                             service.playMusic(music.url)
@@ -112,28 +113,9 @@ class SearchResultFragment : Fragment() {
             recyclerView.adapter = adapter
         }
     }
-
-    private val serviceConnection: ServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            val binder: MusicService.MusicBinder = service as MusicService.MusicBinder
-            musicService = binder.getService()
-            Log.d("onServiceConnected","true")
-            viewModel.isBinding.value = true
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            Log.d("onServiceConnected","false")
-            viewModel.isBinding.value = false
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         Log.d("SearchResultFragment","onDestroy")
-        if (viewModel.isBinding.value!!){
-            activity?.unbindService(serviceConnection)
-            viewModel.isBinding.value = false
-        }
     }
 
 }
